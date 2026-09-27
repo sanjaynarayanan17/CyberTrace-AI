@@ -10,6 +10,8 @@
 // =============================================================================
 
 require('dotenv').config();
+const path = require('path');
+const fs = require('fs');
 const express = require('express');
 const cors = require('cors');
 const helmet = require('helmet');
@@ -90,7 +92,19 @@ app.use('/api/threat', threatRouter);
 app.use('/api/headers', headersRouter);
 app.use('/api/tools', toolsRouter);
 
-// ─── 404 Handler ─────────────────────────────────────────────────────────────
+// ─── Frontend Static Files (Single-Service Deployment Support) ───────────────
+const distPath = path.join(__dirname, '../dist');
+if (fs.existsSync(distPath)) {
+  app.use(express.static(distPath));
+  app.get('*', (req, res, next) => {
+    if (req.path.startsWith('/api')) {
+      return next();
+    }
+    res.sendFile(path.join(distPath, 'index.html'));
+  });
+}
+
+// ─── 404 Handler for API Routes ───────────────────────────────────────────────
 app.use((_req, res) => {
   res.status(404).json({ error: 'ENDPOINT_NOT_FOUND', message: 'The requested API route does not exist.' });
 });
@@ -102,10 +116,10 @@ app.use((err, _req, res, _next) => {
 });
 
 // ─── Start ────────────────────────────────────────────────────────────────────
-app.listen(PORT, () => {
+app.listen(PORT, '0.0.0.0', () => {
   console.log(`\n╔══════════════════════════════════════════════════════╗`);
   console.log(`║   CyberTrace AI — Forensic Backend                  ║`);
-  console.log(`║   Listening on http://localhost:${PORT}                ║`);
+  console.log(`║   Listening on http://0.0.0.0:${PORT}                 ║`);
   console.log(`║   Environment: ${process.env.NODE_ENV || 'development'}                     ║`);
   console.log(`╚══════════════════════════════════════════════════════╝\n`);
 });

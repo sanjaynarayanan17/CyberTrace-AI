@@ -8,7 +8,9 @@
 //   - Threat reputation scoring
 // =============================================================================
 
-const API_BASE = import.meta.env.VITE_BACKEND_URL || 'http://localhost:3001/api';
+const API_BASE =
+  import.meta.env.VITE_BACKEND_URL ||
+  (import.meta.env.DEV ? 'http://localhost:3001/api' : '/api');
 
 /**
  * Check if the forensic backend is online
