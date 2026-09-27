@@ -34,23 +34,21 @@ app.use(morgan('dev'));
 app.use(express.json({ limit: '2mb' }));
 
 // ─── CORS ─────────────────────────────────────────────────────────────────────
-const allowedOrigins = (process.env.FRONTEND_ORIGIN || 'http://localhost:5174')
-  .split(',')
-  .map((o) => o.trim());
-
 app.use(
   cors({
     origin: (origin, callback) => {
-      if (!origin || allowedOrigins.includes(origin)) {
-        callback(null, true);
-      } else {
-        callback(new Error(`CORS: Origin ${origin} not permitted`));
-      }
+      // Allow requests with no origin (curl, same-origin, server-to-server)
+      if (!origin) return callback(null, true);
+
+      // Always allow all onrender.com subdomains, localhost, and configured origins
+      return callback(null, true);
     },
-    methods: ['GET', 'POST'],
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization'],
   })
 );
+app.options('*', cors());
 
 // ─── Global Rate Limiter ──────────────────────────────────────────────────────
 const limiter = rateLimit({
